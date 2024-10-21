@@ -73,6 +73,10 @@ def get_best_split(X, y, node_indices):
 
 def build_tree_recursive(X, y, node_indices, branch_name, max_depth, current_depth, tree):
 
+    if len(X[0]) == max_depth:
+        print("Reached max depth")
+        return
+
     if current_depth == max_depth:
         formatting = " " * current_depth + "-" * current_depth
         print(formatting, "%s leaf node with indices" % branch_name, node_indices)
@@ -155,6 +159,9 @@ def generate_split_viz(node_indices, left_indices, right_indices, feature):
 
 
 def generate_tree_viz(root_indices, y, tree):
+    if len(tree) == 0:
+        print("Tree is empty")
+        return
 
     G = nx.DiGraph()
 
