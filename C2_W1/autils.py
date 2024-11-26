@@ -1,6 +1,14 @@
 import numpy as np
 
 
+def load_data_code():
+    X = np.load("E:\\gitProject\\Machine-Learning-Specialization\\_resources_ML_spec\\C2_W1\\data\\X.npy")
+    y = np.load("E:\\gitProject\\Machine-Learning-Specialization\\_resources_ML_spec\\C2_W1\\data\\y.npy")
+    X = X[0:1000]
+    y = y[0:1000]
+    return X, y
+
+
 def load_data():
     X = np.load("../_resources_ML_spec/C2_W1/data/X.npy")
     y = np.load("../_resources_ML_spec/C2_W1/data/y.npy")
