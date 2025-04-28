@@ -1,8 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from keras.models import Sequential
+from keras.layers import Dense
 from sklearn.model_selection import train_test_split
-from autils import *
+from autils import load_data_code
 
 import logging
 

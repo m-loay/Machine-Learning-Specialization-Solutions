@@ -1,4 +1,4 @@
-""" Utilities for RecSysNN assigment """
+"""Utilities for RecSysNN assigment"""
 
 from collections import defaultdict
 import csv
@@ -6,25 +6,62 @@ import numpy as np
 from numpy import genfromtxt
 import pickle5 as pickle
 import tabulate
+import os
+from pathlib import Path
+
+
+def get_root_folder():
+    """
+    Locate the root project folder by searching for a marker file (e.g., .projectroot).
+    If not found, assume the current working directory is the root.
+    """
+    # Start from the current working directory (for Jupyter Notebooks)
+    current_path = Path(os.getcwd()).resolve()
+
+    # If running as a script, start from the script's directory
+    if "__file__" in globals():
+        current_path = Path(__file__).resolve().parent
+
+    # Traverse up the directory tree to find the root folder
+    for parent in current_path.parents:
+        if (parent / ".projectroot").exists():  # Check for a marker file
+            return parent
+    return current_path  # Fallback to the current directory
+
+
+def get_folder_path(folder_name):
+    """
+    Get the absolute path of a folder in the root project folder.
+    """
+    root_folder = get_root_folder()
+    folder_path = root_folder / folder_name
+    return folder_path.resolve()
+
+
+def get_data_set_path():
+    resources_dir: Path = get_folder_path("_resources_ML_spec")
+    dataset_path: Path = resources_dir / "C3_W2"
+    return dataset_path
 
 
 def load_data():
     """called to load preprepared data for the lab"""
-    item_train = genfromtxt("../_resources_ML_spec/C3_W2/data/content_item_train.csv", delimiter=",")
-    user_train = genfromtxt("../_resources_ML_spec/C3_W2/data/content_user_train.csv", delimiter=",")
-    y_train = genfromtxt("../_resources_ML_spec/C3_W2/data/content_y_train.csv", delimiter=",")
+    csv_data: Path = get_data_set_path() / "data"
+    item_train = genfromtxt(csv_data / "content_item_train.csv", delimiter=",")
+    user_train = genfromtxt(csv_data / "content_user_train.csv", delimiter=",")
+    y_train = genfromtxt(csv_data / "content_y_train.csv", delimiter=",")
     with open(
-        "../_resources_ML_spec/C3_W2/data/content_item_train_header.txt", newline=""
+        csv_data / "content_item_train_header.txt", newline=""
     ) as f:  # csv reader handles quoted strings better
         item_features = list(csv.reader(f))[0]
-    with open("../_resources_ML_spec/C3_W2/data/content_user_train_header.txt", newline="") as f:
+    with open(csv_data / "content_user_train_header.txt", newline="") as f:
         user_features = list(csv.reader(f))[0]
-    item_vecs = genfromtxt("../_resources_ML_spec/C3_W2/data/content_item_vecs.csv", delimiter=",")
+    item_vecs = genfromtxt(csv_data / "content_item_vecs.csv", delimiter=",")
 
     movie_dict = defaultdict(dict)
     count = 0
     #    with open('./data/movies.csv', newline='') as csvfile:
-    with open("../_resources_ML_spec/C3_W2/data/content_movie_list.csv", newline="") as csvfile:
+    with open(csv_data / "content_movie_list.csv", newline="") as csvfile:
         reader = csv.reader(csvfile, delimiter=",", quotechar='"')
         for line in reader:
             if count == 0:
@@ -36,7 +73,7 @@ def load_data():
                 movie_dict[movie_id]["title"] = line[1]
                 movie_dict[movie_id]["genres"] = line[2]
 
-    with open("../_resources_ML_spec/C3_W2/data/content_user_to_genre.pickle", "rb") as f:
+    with open(csv_data / "content_user_to_genre.pickle", "rb") as f:
         user_to_genre = pickle.load(f)
 
     return (
@@ -115,7 +152,9 @@ def pprint_train(x_train, features, vs, u_s, maxcount=5, user=True):
                 *x_train[i, 3:].astype(float),
             ]
         )
-    table = tabulate.tabulate(disp, tablefmt="html", headers="firstrow", floatfmt=flist, numalign="center")
+    table = tabulate.tabulate(
+        disp, tablefmt="html", headers="firstrow", floatfmt=flist, numalign="center"
+    )
     return table
 
 
@@ -174,7 +213,9 @@ def predict_uservec(user_vecs, item_vecs, model, u_s, i_s, scaler):
 
     if np.any(y_pu < 0):
         print("Error, expected all positive predictions")
-    sorted_index = np.argsort(-y_pu, axis=0).reshape(-1).tolist()  # negate to get largest rating first
+    sorted_index = (
+        np.argsort(-y_pu, axis=0).reshape(-1).tolist()
+    )  # negate to get largest rating first
     sorted_ypu = y_pu[sorted_index]
     sorted_items = item_vecs[sorted_index]
     sorted_user = user_vecs[sorted_index]
@@ -227,7 +268,9 @@ def print_existing_user(y_p, y, user, items, ivs, uvs, movie_dict, maxcount=10):
     Inputs are expected to be in sorted order, unscaled.
     """
     count = 0
-    disp = [["y_p", "y", "user", "user genre ave", "movie rating ave", "movie id", "title", "genres"]]
+    disp = [
+        ["y_p", "y", "user", "user genre ave", "movie rating ave", "movie id", "title", "genres"]
+    ]
     count = 0
     for i in range(0, y.shape[0]):
         if y[i, 0] != 0:  # zero means not rated
